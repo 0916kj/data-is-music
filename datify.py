@@ -33,14 +33,13 @@ with open(sys.argv[1]) as csvfile:
 # transform into z-score, modified by standard deviation of the -1 1 uniform
 # distribution
 npdata = numpy.array(data, dtype=numpy.single)
-npmean = numpy.median(npdata, axis=0)
+npmean = numpy.mean(npdata, axis=0)
 npstd = numpy.std(npdata, axis = 0)
 for i in range(4):
     npdata[0:,i] -= npmean[i]
     npdata[0:,i] /= max(npstd[i], numpy.finfo(numpy.single).tiny) / (2/math.sqrt(12))
 
 # now reverse, scale -1 1 to 0, 255
-npdata *= -1
 npdata += 1
 npdata /= 2
 npdata *= 255
