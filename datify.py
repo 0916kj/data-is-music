@@ -4,6 +4,7 @@ import csv
 import numpy
 import sys
 import math
+import serial
 
 data = []
 storedLength = 0
@@ -37,14 +38,31 @@ npstd = numpy.std(npdata, axis = 0)
 for i in range(4):
     npdata[0:,i] -= npmean[i]
     npdata[0:,i] /= max(npstd[i], numpy.finfo(numpy.single).tiny) / (2/math.sqrt(12))
+
 # now scale -1 1 to 0, 255
 npdata += 1
 npdata /= 2
 npdata *= 255
+
 # round and clamp
 npdata = numpy.round(npdata)
 npdata = numpy.clip(npdata, 0, 255)
+
 # cast float to integer
 npdata = npdata.astype(numpy.intc)
 
-# TODO: send the columns to usb
+# set up serial connection
+s = serial.Serial(port='/dev/tty.usbmodemfa141', baudrate=9600)
+
+# loop until quit
+i = 0
+while True:
+    packet = bytearray()
+    packet.append(npdata[i][0])
+    packet.append(npdata[i][1])
+    packet.append(npdata[i][2])
+    packet.append(npdata[i][3])
+    s.write(packet)
+    i += 1
+    if i >= len(npdata):
+        i = 0
