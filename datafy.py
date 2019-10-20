@@ -1,12 +1,14 @@
-#!/usr/bin/env python
+#!/usr/local/bin/python3
 
 import csv
 import numpy
+import sys
+import math
 
 data = []
 storedLength = 0
 
-with open(ARGV[0]) as csvfile:
+with open(sys.argv[1]) as csvfile:
     reader = csv.reader(csvfile)
     for row in reader:
         numericizedrow = []
@@ -14,6 +16,7 @@ with open(ARGV[0]) as csvfile:
             try:
                 numericizedrow.append(float(column))
             except:
+                continue
                 # ignore
         if len(numericizedrow) == 0:
             continue
@@ -23,12 +26,25 @@ with open(ARGV[0]) as csvfile:
             print("Warning: skipping differently sized row")
             continue
         numericizedrow = numericizedrow[0:4]
-        numericizedrow.append([0.0] * 4 - len(numericizedrow))
+        numericizedrow.extend([0.0] * (4 - len(numericizedrow)))
         data.append(numericizedrow)
 
+# transform into z-score, modified by standard deviation of the -1 1 uniform
+# distribution
 npdata = numpy.array(data, dtype=numpy.single)
-npmean = data.mean(axis=1)
-data -= npmean
-npstd = data.std(axis=1)
-data /= npstd * 2
-print(data)
+npmean = numpy.median(npdata, axis=0)
+npstd = numpy.std(npdata, axis = 0)
+for i in range(4):
+    npdata[0:,i] -= npmean[i]
+    npdata[0:,i] /= max(npstd[i], numpy.finfo(numpy.single).tiny) / (2/math.sqrt(12))
+# now scale -1 1 to 0, 255
+npdata += 1
+npdata /= 2
+npdata *= 255
+# round and clamp
+npdata = numpy.round(npdata)
+npdata = numpy.clip(npdata, 0, 255)
+# cast float to integer
+npdata = npdata.astype(numpy.intc)
+
+# TODO: send the columns to usb
