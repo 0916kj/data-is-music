@@ -51,8 +51,10 @@ npdata = numpy.clip(npdata, 0, 255)
 # cast float to integer
 npdata = npdata.astype(numpy.intc)
 
+print(npdata)
+
 # set up serial connection
-s = serial.Serial(port='/dev/tty.usbmodemfa141', baudrate=9600)
+s = serial.Serial(port='/dev/tty.usbmodem1411', baudrate=38400)
 
 # loop until quit
 i = 0
@@ -63,6 +65,7 @@ while True:
     packet.append(npdata[i][2])
     packet.append(npdata[i][3])
     s.write(packet)
+    s.read();
     i += 1
     if i >= len(npdata):
         i = 0
